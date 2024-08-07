@@ -35,16 +35,15 @@ final class UcbDrushCommands extends DrushCommands {
    */
   #[CLI\Command(name: 'ucb_drush_commands:store-report')]
   #[CLI\Usage(name: 'ucb_drush_commands:shortcode-convert', description: 'Store a report')]
-  public function storeReport($argv, $options = []) {
+  public function storeReport($options = []) {
 
-    $myfile = fopen("sites/default/files/migration_report.html", "r");
-    $report = fread($myfile, filesize("sites/default/files/migration_report.html"));
+    $myfile = fopen("sites/default/files/migration-report.html", "r");
+    $report = fread($myfile, filesize("sites/default/files/migration-report.html"));
 
 
 
     $node = null;
 
-    $this->logger()->success(dt($argv));
 
     try {
       $this->logger()->success(dt("Test 1"));
@@ -69,7 +68,7 @@ final class UcbDrushCommands extends DrushCommands {
     {
       $node = Node::create([
         'type' => 'basic_page',
-        'title' => 'Site Report',
+        'title' => 'Migration Report',
         'body' => [
           'value' => $report,
           'format' => 'full_html',
