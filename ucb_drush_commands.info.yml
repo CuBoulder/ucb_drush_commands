@@ -1,0 +1,5 @@
+name: 'ucb_drush_commands'
+type: module
+description: 'Repository of drush commands to extend drush functionality for CU Boulder.'
+package: Custom
+core_version_requirement: ^10 || ^11
