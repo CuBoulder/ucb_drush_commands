@@ -7,6 +7,7 @@ use Drush\Commands\DrushCommands;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\node\Entity\Node;
 use \Drupal\Core\Url;
+use Drupal\ucb_default_content\DefaultContent;
 
 /**
  * A Drush commandfile.
@@ -98,7 +99,12 @@ final class UcbDrushCommands extends DrushCommands {
   }
 
 
+  /**
+   * Create default 404 page.
+   */
+  #[CLI\Command(name: 'ucb_drush_commands:create-404', aliases: ['c404'])]
+  #[CLI\Usage(name: 'ucb_drush_commands:create-404', description: 'Create default 404 page')]
   public function create404Page() {
-    _create_404_page();
+    DefaultContent::create_404_page();
   }
 }
