@@ -97,4 +97,8 @@ final class UcbDrushCommands extends DrushCommands {
   public function shortcodeConvert($arg1, $options = ['option-name' => 'default']) {
   }
 
+
+  public function create404Page() {
+    _create_404_page();
+  }
 }
