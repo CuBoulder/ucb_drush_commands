@@ -15,11 +15,20 @@ use Drupal\ucb_default_content\DefaultContent;
 final class UcbDrushCommands extends DrushCommands {
 
   /**
+   * The DefaultContent service.
+   *
+   * @var \Drupal\ucb_default_content\DefaultContent
+   */
+  protected $defaultContent;
+
+  /**
    * Constructs a UcbDrushCommands object.
    */
   public function __construct(
+    DefaultContent $defaultContent
   ) {
     parent::__construct();
+    $this->defaultContent = $defaultContent;
   }
 
   /**
@@ -27,9 +36,9 @@ final class UcbDrushCommands extends DrushCommands {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('ucb_default_content')
     );
   }
-
 
   /**
    * Store a report.
@@ -86,10 +95,6 @@ final class UcbDrushCommands extends DrushCommands {
     }
   }
 
-
-
-
-
   /**
    * Convert shortcodes in to CKEditor5 HTML.
    */
@@ -98,13 +103,12 @@ final class UcbDrushCommands extends DrushCommands {
   public function shortcodeConvert($arg1, $options = ['option-name' => 'default']) {
   }
 
-
   /**
    * Create default 404 page.
    */
   #[CLI\Command(name: 'ucb_drush_commands:create-404', aliases: ['c404'])]
   #[CLI\Usage(name: 'ucb_drush_commands:create-404', description: 'Create default 404 page')]
   public function create404Page() {
-    DefaultContent::create_404_page();
+    $this->defaultContent->create_404_page();
   }
 }
