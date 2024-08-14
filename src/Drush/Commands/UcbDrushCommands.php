@@ -47,24 +47,19 @@ final class UcbDrushCommands extends DrushCommands {
   #[CLI\Usage(name: 'ucb_drush_commands:shortcode-convert', description: 'Store a report')]
   public function storeReport($options = []) {
 
-    $myfile = fopen("/files/migration-report.html", "r");
-    $report = fread($myfile, filesize("/files/migration-report.html"));
+    $myfile = fopen("web/sites/default/files/migration-report.html", "r");
+    $report = fread($myfile, filesize("web/sites/default/files/migration-report.html"));
 
     $node = NULL;
 
     try {
-      $this->logger()->success(dt("Test 1"));
       $alias = \Drupal::service('path_alias.manager')->getPathByAlias('/migration-report');
       $this->logger()->success(dt($alias));
-      $this->logger()->success(dt("Test 2"));
 
       $params = Url::fromUri("internal:" . $alias)->getRouteParameters();
 
-      $this->logger()->success(dt("Test 3"));
       $entity_type = key($params);
-      $this->logger()->success(dt("Test 4"));
       $node = \Drupal::entityTypeManager()->getStorage($entity_type)->load($params[$entity_type]);
-      $this->logger()->success(dt("Test 5"));
 
     }
     catch (\Exception $e) {
