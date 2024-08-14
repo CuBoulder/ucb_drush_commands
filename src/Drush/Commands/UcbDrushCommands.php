@@ -2,12 +2,12 @@
 
 namespace Drupal\ucb_drush_commands\Drush\Commands;
 
+use Drupal\Core\Url;
+use Drupal\node\Entity\Node;
+use Drupal\ucb_default_content\DefaultContent;
 use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\node\Entity\Node;
-use \Drupal\Core\Url;
-use Drupal\ucb_default_content\DefaultContent;
 
 /**
  * A Drush commandfile.
@@ -25,7 +25,7 @@ final class UcbDrushCommands extends DrushCommands {
    * Constructs a UcbDrushCommands object.
    */
   public function __construct(
-    DefaultContent $defaultContent
+    DefaultContent $defaultContent,
   ) {
     parent::__construct();
     $this->defaultContent = $defaultContent;
@@ -50,10 +50,7 @@ final class UcbDrushCommands extends DrushCommands {
     $myfile = fopen("sites/default/files/migration-report.html", "r");
     $report = fread($myfile, filesize("sites/default/files/migration-report.html"));
 
-
-
-    $node = null;
-
+    $node = NULL;
 
     try {
       $this->logger()->success(dt("Test 1"));
@@ -70,12 +67,11 @@ final class UcbDrushCommands extends DrushCommands {
       $this->logger()->success(dt("Test 5"));
 
     }
-    catch(\Exception $e) {
+    catch (\Exception $e) {
       $this->logger()->success(dt($e->getMessage()));
     }
 
-    if(is_null($node))
-    {
+    if (is_null($node)) {
       $node = Node::create([
         'type' => 'basic_page',
         'title' => 'Migration Report',
@@ -88,9 +84,8 @@ final class UcbDrushCommands extends DrushCommands {
       $node->save();
       fclose($myfile);
     }
-    else
-    {
-      $node->set('body',  ['value' => $report, 'format' => 'full_html']);
+    else {
+      $node->set('body', ['value' => $report, 'format' => 'full_html']);
       $node->save();
     }
   }
@@ -109,6 +104,7 @@ final class UcbDrushCommands extends DrushCommands {
   #[CLI\Command(name: 'ucb_drush_commands:create-404', aliases: ['c404'])]
   #[CLI\Usage(name: 'ucb_drush_commands:create-404', description: 'Create default 404 page')]
   public function create404Page() {
-    $this->defaultContent->create_404_page();
+    $this->defaultContent->create404Page();
   }
+
 }
