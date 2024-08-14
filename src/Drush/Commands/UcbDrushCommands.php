@@ -47,8 +47,8 @@ final class UcbDrushCommands extends DrushCommands {
   #[CLI\Usage(name: 'ucb_drush_commands:shortcode-convert', description: 'Store a report')]
   public function storeReport($options = []) {
 
-    $myfile = fopen("sites/default/files/migration-report.html", "r");
-    $report = fread($myfile, filesize("sites/default/files/migration-report.html"));
+    $myfile = fopen("/files/migration-report.html", "r");
+    $report = fread($myfile, filesize("/files/migration-report.html"));
 
     $node = NULL;
 
