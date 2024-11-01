@@ -90,7 +90,7 @@ final class UcbDrushCommands extends DrushCommands {
                     $this->logger()->success(dt(print_r($sectionconfig, True)));
                     $this->logger()->success(dt('FID: ' . $fid));
 
-                    $url = $file->createFileUrl();
+                    $url = $file->createFileUrl(TRUE);
 
 
                     $crop = \Drupal::service('focal_point.manager')->getCropEntity($file, 'focal_point');
