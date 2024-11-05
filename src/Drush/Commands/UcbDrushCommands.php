@@ -12,6 +12,7 @@ use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\media\Entity\Media;
 use Drupal\file\Entity\File;
+use Drupal\Core\Config;
 
 /**
  * A Drush commandfile.
@@ -52,106 +53,116 @@ final class UcbDrushCommands extends DrushCommands {
     #[CLI\Usage(name: 'ucb_drush_commands:section-bg-fix', description: 'Fix section background images')]
     public function sectionBackgroundFix()
     {
-        $this->logger()->success(dt('Loading basic_page nodes...'));
-        $nids = \Drupal::entityQuery('node')->condition('type', 'basic_page')->accessCheck(FALSE)->execute();
-
-        $nodes =  \Drupal\node\Entity\Node::loadMultiple($nids);
-
-        foreach ($nodes as $node)
-        {
-            foreach($node->get(OverridesSectionStorage::FIELD_NAME) as $sectionItem)
-            {
-                $section = $sectionItem->getValue()['section'];
-                $sectionconfig = $section->getLayoutSettings();
-
-                if(array_key_exists('background_image', $sectionconfig))
-                {
-                    $this->logger()->success(dt('background_image exists...'));
-                    if(!empty(trim($sectionconfig['background_image_styles'])))
-                    {
-                        $this->logger()->success(dt('background_image is not empty...'));
-
-                        $overlay_selection = $sectionconfig['background_image_styles'];
-                        $overlay_styles = "";
-                        $new_styles = "";
-
-                        if ($overlay_selection == "black") {
-                            $overlay_styles = "linear-gradient(rgb(20, 20, 20, 0.5), rgb(20, 20, 20, 0.5))";
-                        } elseif ($overlay_selection == "white") {
-                            $overlay_styles = "linear-gradient(rgb(255, 255, 255, 0.7), rgb(255, 255, 255, 0.7))";
-                        } else {
-                            $overlay_styles = "none";
-                        }
-
-                        $mid = $sectionconfig['background_image'];
 
 
-                        if(!is_null($mid))
-                        {
-                            $this->logger()->success(dt('MID is not null'));
-                            $this->logger()->success(dt('MID: ' . $mid));
+        $config = \Drupal::config('pantheon_domain_masking.settings');
 
 
 
-                            $mediaobject = \Drupal::entityTypeManager()->getStorage('media')->load($mid);
-
-                            $this->logger()->success(dt(print_r($sectionconfig, True)));
-                            $this->logger()->success(dt('MID Loaded: ' . $mid));
-
-                            $fid = $mediaobject->field_media_image->target_id;
-                            $this->logger()->success(dt('FID: ' . $fid));
+        $subpath = $config->get('subpath', '');
+        $enabled = \filter_var($config->get('enabled', 'no'), FILTER_VALIDATE_BOOLEAN);
+        if($enabled) {
 
 
-                            $file = \Drupal::entityTypeManager()->getStorage('file')->load($fid);
+            $this->logger()->success(dt('Loading basic_page nodes...'));
+            $nids = \Drupal::entityQuery('node')->condition('type', 'basic_page')->accessCheck(FALSE)->execute();
 
-                            $this->logger()->success(dt('FID Loaded: ' . $fid));
+            $nodes = \Drupal\node\Entity\Node::loadMultiple($nids);
+
+            foreach ($nodes as $node) {
+                foreach ($node->get(OverridesSectionStorage::FIELD_NAME) as $sectionItem) {
+                    $section = $sectionItem->getValue()['section'];
+                    $sectionconfig = $section->getLayoutSettings();
+
+                    if (array_key_exists('background_image', $sectionconfig)) {
+                        $this->logger()->success(dt('background_image exists...'));
+                        if (!empty(trim($sectionconfig['background_image_styles']))) {
+                            $this->logger()->success(dt('background_image is not empty...'));
+
+                            $overlay_selection = $sectionconfig['background_image_styles'];
+                            $overlay_styles = "";
+                            $new_styles = "";
+
+                            if ($overlay_selection == "black") {
+                                $overlay_styles = "linear-gradient(rgb(20, 20, 20, 0.5), rgb(20, 20, 20, 0.5))";
+                            } elseif ($overlay_selection == "white") {
+                                $overlay_styles = "linear-gradient(rgb(255, 255, 255, 0.7), rgb(255, 255, 255, 0.7))";
+                            } else {
+                                $overlay_styles = "none";
+                            }
+
+                            $mid = $sectionconfig['background_image'];
 
 
+                            if (!is_null($mid)) {
+                                $this->logger()->success(dt('MID is not null'));
+                                $this->logger()->success(dt('MID: ' . $mid));
 
-                            $url = $file->createFileUrl(FALSE);
 
-                            $this->logger()->success(dt('URL: ' . $url));
+                                $mediaobject = \Drupal::entityTypeManager()->getStorage('media')->load($mid);
+
+                                $this->logger()->success(dt(print_r($sectionconfig, True)));
+                                $this->logger()->success(dt('MID Loaded: ' . $mid));
+
+                                $fid = $mediaobject->field_media_image->target_id;
+                                $this->logger()->success(dt('FID: ' . $fid));
 
 
-                            $crop = \Drupal::service('focal_point.manager')->getCropEntity($file, 'focal_point');
-                            if ($crop) {
-                                // Get the x and y position from the crop.
-                                $fp_abs = $crop->position();
-                                $x = $fp_abs['x'];
-                                $y = $fp_abs['y'];
+                                $file = \Drupal::entityTypeManager()->getStorage('file')->load($fid);
 
-                                // Get the original width and height from the image.
-                                $image_factory = \Drupal::service('image.factory');
-                                $image = $image_factory->get($file->getFileUri());
-                                $width = $image->getWidth();
-                                $height = $image->getHeight();
+                                $this->logger()->success(dt('FID Loaded: ' . $fid));
 
-                                // Convert the absolute x and y positions to relative values.
-                                $fp_rel = \Drupal::service('focal_point.manager')->absoluteToRelative($x, $y, $width, $height);
-                                $position_vars = $fp_rel['x'] . '% ' . $fp_rel['y'] . '%;';
+
+//                                $url = $file->createFileUrl();
+                                $url = "https://www.colorado.edu/" . $subpath . $file->createFileUrl();
+
+                                $this->logger()->success(dt('URL: ' . $url));
+
+
+                                $crop = \Drupal::service('focal_point.manager')->getCropEntity($file, 'focal_point');
+                                if ($crop) {
+                                    // Get the x and y position from the crop.
+                                    $fp_abs = $crop->position();
+                                    $x = $fp_abs['x'];
+                                    $y = $fp_abs['y'];
+
+                                    // Get the original width and height from the image.
+                                    $image_factory = \Drupal::service('image.factory');
+                                    $image = $image_factory->get($file->getFileUri());
+                                    $width = $image->getWidth();
+                                    $height = $image->getHeight();
+
+                                    // Convert the absolute x and y positions to relative values.
+                                    $fp_rel = \Drupal::service('focal_point.manager')->absoluteToRelative($x, $y, $width, $height);
+                                    $position_vars = $fp_rel['x'] . '% ' . $fp_rel['y'] . '%;';
 //                        }
 
 
-                                $media_image_styles = [
-                                    'background:  ' . $overlay_styles . ', url(' . $url . ');',
-                                    'background-position: ' . $position_vars . ';',
-                                    'background-size: cover;',
-                                    'background-repeat: no-repeat;',
-                                ];
+                                    $media_image_styles = [
+                                        'background:  ' . $overlay_styles . ', url(' . $url . ');',
+                                        'background-position: ' . $position_vars . ';',
+                                        'background-size: cover;',
+                                        'background-repeat: no-repeat;',
+                                    ];
 
-                                $new_styles = implode(' ', $media_image_styles);
+                                    $new_styles = implode(' ', $media_image_styles);
 
+                                }
+                                //            $sectionconfig['background_image_styles'] = "TESTX";
+                                $sectionconfig['background_image_styles'] = $new_styles;
+                                $section->setLayoutSettings($sectionconfig);
+                                $sectionItem->setValue($section);
                             }
-                            //            $sectionconfig['background_image_styles'] = "TESTX";
-                            $sectionconfig['background_image_styles'] = $new_styles;
-                            $section->setLayoutSettings($sectionconfig);
-                            $sectionItem->setValue($section);
                         }
                     }
                 }
-            }
 
-            $node->save();
+                $node->save();
+            }
+        }
+        else
+        {
+            $this->logger()->success(dt('Domain masking not enabled.  Exiting.'));
         }
     }
 
