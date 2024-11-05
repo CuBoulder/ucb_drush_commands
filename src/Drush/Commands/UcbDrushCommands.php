@@ -10,7 +10,8 @@ use Drush\Commands\DrushCommands;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
-
+use Drupal\media\Entity\Media;
+use Drupal\file\Entity\File;
 
 /**
  * A Drush commandfile.
@@ -65,8 +66,10 @@ final class UcbDrushCommands extends DrushCommands {
 
                 if(array_key_exists('background_image', $sectionconfig))
                 {
-                    if(empty(trim($sectionconfig['background_image_styles'])))
+                    $this->logger()->success(dt('background_image exists...'));
+                    if(!empty(trim($sectionconfig['background_image_styles'])))
                     {
+                        $this->logger()->success(dt('background_image is not empty...'));
 
                         $overlay_selection = $sectionconfig['background_image_styles'];
                         $overlay_styles = "";
@@ -80,16 +83,34 @@ final class UcbDrushCommands extends DrushCommands {
                             $overlay_styles = "none";
                         }
 
-//                        $fid = $sectionconfig['background_image'] + 1;
-                        $fid = $sectionconfig['background_image'];
-                        if(!is_null($fid)) {
-                            $file = \Drupal::entityTypeManager()->getStorage('file')->load($fid);
+                        $mid = $sectionconfig['background_image'];
 
+
+                        if(!is_null($mid))
+                        {
+                            $this->logger()->success(dt('MID is not null'));
+                            $this->logger()->success(dt('MID: ' . $mid));
+
+
+
+                            $mediaobject = \Drupal::entityTypeManager()->getStorage('media')->load($mid);
 
                             $this->logger()->success(dt(print_r($sectionconfig, True)));
+                            $this->logger()->success(dt('MID Loaded: ' . $mid));
+
+                            $fid = $mediaobject->field_media_image->target_id;
                             $this->logger()->success(dt('FID: ' . $fid));
 
+
+                            $file = \Drupal::entityTypeManager()->getStorage('file')->load($fid);
+
+                            $this->logger()->success(dt('FID Loaded: ' . $fid));
+
+
+
                             $url = $file->createFileUrl(FALSE);
+
+                            $this->logger()->success(dt('URL: ' . $url));
 
 
                             $crop = \Drupal::service('focal_point.manager')->getCropEntity($file, 'focal_point');
@@ -166,7 +187,7 @@ final class UcbDrushCommands extends DrushCommands {
 
 
     /**
-     * Store a report.
+     * Store a migration report.
      */
     #[CLI\Command(name: 'ucb_drush_commands:store-report')]
     #[CLI\Usage(name: 'ucb_drush_commands:shortcode-convert', description: 'Store a report')]
@@ -210,6 +231,54 @@ final class UcbDrushCommands extends DrushCommands {
         }
     }
 
+
+
+    /**
+     * Store a site health report.
+     */
+    #[CLI\Command(name: 'ucb_drush_commands:store-site-health-report')]
+    #[CLI\Usage(name: 'ucb_drush_commands:store-site-health-report', description: 'Store a site health report')]
+    public function storeSiteHealthReport($options = []) {
+
+        $myfile = fopen("sites/default/files/site-health-report.html", "r");
+        $report = fread($myfile, filesize("sites/default/files/site-health-report-report.html"));
+
+        $node = NULL;
+
+        try {
+            $alias = \Drupal::service('path_alias.manager')->getPathByAlias('/site-health-report');
+            $this->logger()->success(dt($alias));
+
+            $params = Url::fromUri("internal:" . $alias)->getRouteParameters();
+
+            $entity_type = key($params);
+            $node = \Drupal::entityTypeManager()->getStorage($entity_type)->load($params[$entity_type]);
+
+        }
+        catch (\Exception $e) {
+            $this->logger()->success(dt($e->getMessage()));
+        }
+
+        if (is_null($node)) {
+            $node = Node::create([
+                'type' => 'basic_page',
+                'title' => 'Site Health Report',
+                'body' => [
+                    'value' => $report,
+                    'format' => 'full_html',
+                ],
+            ]);
+
+            $node->save();
+            fclose($myfile);
+        }
+        else {
+            $node->set('body', ['value' => $report, 'format' => 'full_html']);
+            $node->save();
+        }
+    }
+
+
     /**
      * Convert shortcodes in to CKEditor5 HTML.
      */
@@ -228,3 +297,4 @@ final class UcbDrushCommands extends DrushCommands {
     }
 
 }
+
