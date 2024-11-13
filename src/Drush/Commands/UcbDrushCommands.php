@@ -252,7 +252,7 @@ final class UcbDrushCommands extends DrushCommands {
     public function storeSiteHealthReport($options = []) {
 
         $myfile = fopen("sites/default/files/site-health-report.html", "r");
-        $report = fread($myfile, filesize("sites/default/files/site-health-report-report.html"));
+        $report = fread($myfile, filesize("sites/default/files/site-health-report.html"));
 
         $node = NULL;
 
