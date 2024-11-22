@@ -233,11 +233,13 @@ final class UcbDrushCommands extends DrushCommands {
                 ],
             ]);
 
+            $node->setPublished(false);
             $node->save();
             fclose($myfile);
         }
         else {
             $node->set('body', ['value' => $report, 'format' => 'full_html']);
+            $node->setPublished(false);
             $node->save();
         }
     }
@@ -280,11 +282,13 @@ final class UcbDrushCommands extends DrushCommands {
                 ],
             ]);
 
+            $node->setPublished(false);
             $node->save();
             fclose($myfile);
         }
         else {
             $node->set('body', ['value' => $report, 'format' => 'full_html']);
+            $node->setPublished(false);
             $node->save();
         }
     }
