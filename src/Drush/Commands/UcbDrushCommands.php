@@ -311,5 +311,19 @@ final class UcbDrushCommands extends DrushCommands {
         $this->defaultContent->create404Page();
     }
 
+
+    /**
+     * Restore article form settings for syndication-enabled sites
+     */
+    #[CLI\Command(name: 'ucb_drush_commands:restore-article-form-settings', aliases: ['rafs'])]
+    #[CLI\Usage(name: 'ucb_drush_commands:restore-article-form-settings', description: 'Restore Article form settings for syndication-enabled sites')]
+    public function restoreArticleFormSettings() {
+
+        if(\Drupal::hasService('ucb_article_syndication'))
+        {
+            $service = \Drupal::service('ucb_article_syndication');
+            $service->showSyndicationFields();
+        }
+    }
 }
 
