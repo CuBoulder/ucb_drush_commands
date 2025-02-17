@@ -325,5 +325,59 @@ final class UcbDrushCommands extends DrushCommands {
             $service->showSyndicationFields();
         }
     }
-}
 
+
+    /**
+     * Grants permissions to Site Manager and updates administerusersbyrole settings.
+     */
+    #[CLI\Command(name: 'ucb_drush_commands:update-site-manager-permissions', aliases: ['usmp'])]
+    #[CLI\Usage(name: 'ucb_drush_commands:update-site-manager-permissions', description: 'Grants permissions to Site Manager and updates administerusersbyrole settings')]
+    public function updateSiteManagerPermissions() {
+        // Ensure that the "administerusersbyrole" module is fully installed before proceeding.
+        if (!\Drupal::moduleHandler()->moduleExists('administerusersbyrole')) {
+            $this->logger()->error('administerusersbyrole module is not installed. Skipping role and config update.');
+            return;
+        }
+
+        // Load and update administerusersbyrole.settings.yml, in case this is a pre-existing site
+        $config = \Drupal::configFactory()->getEditable('administerusersbyrole.settings');
+        $config->merge([
+            'roles' => [
+                'site_manager' => 'perm',
+                'site_owner' => 'perm',
+            ],
+        ])->save();
+
+        $this->logger()->notice('Updated administerusersbyrole.settings.yml to set site_manager to "perm".');
+
+        // Permissions for site_manager.
+        $site_manager_permissions = [
+            'view users by role',
+            'cancel users by role',
+            'edit users by role',
+            'role-assign users by role',
+            'cancel users with role site_manager',
+            'edit users with role site_manager',
+            'view users with role site_manager',
+            'role-assign users with role site_manager',
+            'cancel users with role site_owner',
+            'edit users with role site_owner',
+            'view users with role site_owner',
+            'role-assign users with role site_owner',
+        ];
+
+        // Update permissions for site_manager.
+        $role = \Drupal\user\Entity\Role::load('site_manager');
+        if ($role) {
+            foreach ($site_manager_permissions as $permission) {
+                if (!$role->hasPermission($permission)) {
+                    $role->grantPermission($permission);
+                }
+            }
+            $role->save();
+            $this->logger()->notice("Updated permissions for site_manager role.");
+        } else {
+            $this->logger()->error("site_manager role does not exist.");
+        }
+    }
+}
