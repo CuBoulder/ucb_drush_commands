@@ -344,6 +344,7 @@ final class UcbDrushCommands extends DrushCommands {
         $config->merge([
             'roles' => [
                 'site_manager' => 'perm',
+                'site_owner' => 'perm',
             ],
         ])->save();
 
@@ -359,6 +360,10 @@ final class UcbDrushCommands extends DrushCommands {
             'edit users with role site_manager',
             'view users with role site_manager',
             'role-assign users with role site_manager',
+            'cancel users with role site_owner',
+            'edit users with role site_owner',
+            'view users with role site_owner',
+            'role-assign users with role site_owner',
         ];
 
         // Update permissions for site_manager.
