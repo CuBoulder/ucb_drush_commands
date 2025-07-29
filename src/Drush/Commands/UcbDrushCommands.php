@@ -14,6 +14,8 @@ use Drupal\media\Entity\Media;
 use Drupal\file\Entity\File;
 use Drupal\Core\Config;
 
+use Symfony\Component\Yaml\Yaml;
+
 /**
  * A Drush commandfile.
  */
@@ -379,5 +381,48 @@ final class UcbDrushCommands extends DrushCommands {
         } else {
             $this->logger()->error("site_manager role does not exist.");
         }
+    }
+
+
+
+    /**
+     * Get full config.
+     */
+    #[CLI\Command(name: 'ucb_drush_commands:get-full-config', aliases: ['gfc'])]
+    #[CLI\Usage(name: 'ucb_drush_commands:get-full-config', description: 'Prints serialized full config')]
+    public function getFullConfig()
+    {
+        $this->logger()->notice("get-full-config called.");
+
+        $factory = \Drupal::configFactory();
+        $all_config_names = \Drupal::service('config.storage')->listAll();
+        $objects = [];
+
+        foreach($all_config_names as $config_name)
+        {
+            $objects[$config_name] = $factory->getEditable($config_name)->get('');
+        }
+
+        return Yaml::dump($objects);
+    }
+    /**
+     * Get full config with orverrides.
+     */
+    #[CLI\Command(name: 'ucb_drush_commands:get-full-config-overrides', aliases: ['gfco'])]
+    #[CLI\Usage(name: 'ucb_drush_commands:get-full-config-overrides', description: 'Prints serialized full config with overrides')]
+    public function getFullConfigOverrides()
+    {
+        $this->logger()->notice("get-full-config-overrides called.");
+
+        $factory = \Drupal::configFactory();
+        $all_config_names = \Drupal::service('config.storage')->listAll();
+        $objects = [];
+
+        foreach($all_config_names as $config_name)
+        {
+            $objects[$config_name] = $factory->get($config_name)->get('');
+        }
+
+        return Yaml::dump($objects);
     }
 }
