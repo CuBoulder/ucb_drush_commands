@@ -392,8 +392,6 @@ final class UcbDrushCommands extends DrushCommands {
     #[CLI\Usage(name: 'ucb_drush_commands:get-full-config', description: 'Prints serialized full config')]
     public function getFullConfig()
     {
-        $this->logger()->notice("get-full-config called.");
-
         $factory = \Drupal::configFactory();
         $all_config_names = \Drupal::service('config.storage')->listAll();
         $objects = [];
@@ -406,14 +404,12 @@ final class UcbDrushCommands extends DrushCommands {
         return Yaml::dump($objects);
     }
     /**
-     * Get full config with orverrides.
+     * Get full config with overrides.
      */
     #[CLI\Command(name: 'ucb_drush_commands:get-full-config-overrides', aliases: ['gfco'])]
     #[CLI\Usage(name: 'ucb_drush_commands:get-full-config-overrides', description: 'Prints serialized full config with overrides')]
     public function getFullConfigOverrides()
     {
-        $this->logger()->notice("get-full-config-overrides called.");
-
         $factory = \Drupal::configFactory();
         $all_config_names = \Drupal::service('config.storage')->listAll();
         $objects = [];
