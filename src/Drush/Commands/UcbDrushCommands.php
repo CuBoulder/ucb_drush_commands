@@ -482,6 +482,16 @@ final class UcbDrushCommands extends DrushCommands {
             $email_parts = explode('@', $email);
             $identikey_from_email = $email_parts[0];
 
+            // Skip if identikey contains a period (e.g., Joshua.Nicholson@colorado.edu).
+            if (strpos($identikey_from_email, '.') !== FALSE) {
+                $this->logger()->notice(dt('Skipping user @username - email prefix contains a period: @email.', [
+                    '@username' => $username,
+                    '@email' => $email,
+                ]));
+                $skipped_count++;
+                continue;
+            }
+
             // Check if field exists.
             if (!$user->hasField('field_identikey')) {
                 $this->logger()->warning(dt('User @username does not have field_identikey field.', ['@username' => $username]));
