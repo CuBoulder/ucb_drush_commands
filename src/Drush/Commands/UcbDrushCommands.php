@@ -13,6 +13,7 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\media\Entity\Media;
 use Drupal\file\Entity\File;
 use Drupal\Core\Config;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 use Symfony\Component\Yaml\Yaml;
 
@@ -29,13 +30,22 @@ final class UcbDrushCommands extends DrushCommands {
     protected $defaultContent;
 
     /**
+     * The entity type manager.
+     *
+     * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+     */
+    protected $entityTypeManager;
+
+    /**
      * Constructs a UcbDrushCommands object.
      */
     public function __construct(
         DefaultContent $defaultContent,
+        EntityTypeManagerInterface $entity_type_manager,
     ) {
         parent::__construct();
         $this->defaultContent = $defaultContent;
+        $this->entityTypeManager = $entity_type_manager;
     }
 
     /**
@@ -43,7 +53,8 @@ final class UcbDrushCommands extends DrushCommands {
      */
     public static function create(ContainerInterface $container) {
         return new static(
-            $container->get('ucb_default_content')
+            $container->get('ucb_default_content'),
+            $container->get('entity_type.manager')
         );
     }
 
@@ -420,5 +431,88 @@ final class UcbDrushCommands extends DrushCommands {
         }
 
         return Yaml::dump($objects);
+    }
+
+    /**
+     * Sets the identikey field for all existing user accounts.
+     */
+    #[CLI\Command(name: 'ucb_drush_commands:set-identikey', aliases: ['ucbsi', 'ucb-set-identikey'])]
+    #[CLI\Usage(name: 'ucb_drush_commands:set-identikey', description: 'Sets the identikey field for all existing users based on the part before @ in their email address')]
+    public function setIdentikey() {
+        $storage = $this->entityTypeManager->getStorage('user');
+        
+        // Load all users, excluding anonymous (uid 0).
+        $user_ids = $storage->getQuery()
+            ->accessCheck(FALSE)
+            ->condition('uid', 0, '>')
+            ->execute();
+
+        if (empty($user_ids)) {
+            $this->logger()->warning('No users found to process.');
+            return;
+        }
+
+        $this->output()->writeln(dt('Processing @count user(s)...', ['@count' => count($user_ids)]));
+
+        $updated_count = 0;
+        $skipped_count = 0;
+        $error_count = 0;
+
+        foreach ($user_ids as $uid) {
+            /** @var \Drupal\user\UserInterface|null $user */
+            $user = $storage->load($uid);
+
+            if (!$user) {
+                $this->logger()->warning(dt('Failed to load user with ID @uid.', ['@uid' => $uid]));
+                $error_count++;
+                continue;
+            }
+
+            $username = $user->getAccountName();
+            $email = $user->getEmail();
+
+            // Skip if no email address.
+            if (empty($email)) {
+                $this->logger()->warning(dt('User @username does not have an email address.', ['@username' => $username]));
+                $skipped_count++;
+                continue;
+            }
+
+            // Extract identikey from email (part before @).
+            $email_parts = explode('@', $email);
+            $identikey_from_email = $email_parts[0];
+
+            // Check if field exists.
+            if (!$user->hasField('field_identikey')) {
+                $this->logger()->warning(dt('User @username does not have field_identikey field.', ['@username' => $username]));
+                $skipped_count++;
+                continue;
+            }
+
+            // Get current identikey value.
+            $current_identikey = $user->get('field_identikey')->value;
+
+            // Set identikey if empty or doesn't match the email-based identikey.
+            if (empty($current_identikey) || $current_identikey !== $identikey_from_email) {
+                $user->set('field_identikey', $identikey_from_email);
+                $user->save();
+                $this->logger()->success(dt('Set identikey for @username to @identikey (from @email).', [
+                    '@username' => $username,
+                    '@identikey' => $identikey_from_email,
+                    '@email' => $email,
+                ]));
+                $updated_count++;
+            }
+            else {
+                $this->logger()->notice(dt('User @username already has correct identikey set.', ['@username' => $username]));
+                $skipped_count++;
+            }
+        }
+
+        $this->output()->writeln(dt('Summary: @updated updated, @skipped skipped, @errors errors.', [
+            '@updated' => $updated_count,
+            '@skipped' => $skipped_count,
+            '@errors' => $error_count,
+        ]));
     }
 }
