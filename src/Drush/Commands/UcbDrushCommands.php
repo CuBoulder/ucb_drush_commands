@@ -471,6 +471,15 @@ final class UcbDrushCommands extends DrushCommands {
             $username = $user->getAccountName();
             $email = $user->getEmail();
 
+            // Skip if username contains "admin" (case-insensitive).
+            if (stripos($username, 'admin') !== FALSE) {
+                $this->logger()->notice(dt('Skipping user @username - username contains "admin".', [
+                    '@username' => $username,
+                ]));
+                $skipped_count++;
+                continue;
+            }
+
             // Skip if no email address.
             if (empty($email)) {
                 $this->logger()->warning(dt('User @username does not have an email address.', ['@username' => $username]));
