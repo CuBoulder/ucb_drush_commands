@@ -534,4 +534,75 @@ final class UcbDrushCommands extends DrushCommands {
             '@errors' => $error_count,
         ]));
     }
+
+    /**
+     * Resets all Terms of Service acceptance for all users.
+     */
+    #[CLI\Command(name: 'ucb_drush_commands:reset-tos-acceptance', aliases: ['ucbrtos'])]
+    #[CLI\Usage(name: 'ucb_drush_commands:reset-tos-acceptance', description: 'Resets all Terms of Service acceptance booleans for all users. Useful when TOS is updated and users need to re-accept.')]
+    public function resetTosAcceptance() {
+        $storage = $this->entityTypeManager->getStorage('user');
+        
+        // Load all users, excluding anonymous (uid 0).
+        $user_ids = $storage->getQuery()
+            ->accessCheck(FALSE)
+            ->condition('uid', 0, '>')
+            ->execute();
+
+        if (empty($user_ids)) {
+            $this->logger()->warning('No users found to process.');
+            return;
+        }
+
+        $this->output()->writeln(dt('Processing @count user(s)...', ['@count' => count($user_ids)]));
+
+        $reset_count = 0;
+        $skipped_count = 0;
+        $error_count = 0;
+
+        foreach ($user_ids as $uid) {
+            /** @var \Drupal\user\UserInterface|null $user */
+            $user = $storage->load($uid);
+
+            if (!$user) {
+                $this->logger()->warning(dt('Failed to load user with ID @uid.', ['@uid' => $uid]));
+                $error_count++;
+                continue;
+            }
+
+            // Check if field exists.
+            if (!$user->hasField('field_tos_acceptance')) {
+                $this->logger()->notice(dt('User @username does not have field_tos_acceptance field.', [
+                    '@username' => $user->getAccountName(),
+                ]));
+                $skipped_count++;
+                continue;
+            }
+
+            // Get current TOS acceptance value.
+            $current_tos = $user->get('field_tos_acceptance')->value;
+
+            // Reset TOS acceptance to 0 (false) if it's currently set to 1 (true).
+            if (!empty($current_tos)) {
+                $user->set('field_tos_acceptance', 0);
+                $user->save();
+                $this->logger()->success(dt('Reset TOS acceptance for @username.', [
+                    '@username' => $user->getAccountName(),
+                ]));
+                $reset_count++;
+            }
+            else {
+                $this->logger()->notice(dt('User @username already has TOS acceptance set to false.', [
+                    '@username' => $user->getAccountName(),
+                ]));
+                $skipped_count++;
+            }
+        }
+
+        $this->output()->writeln(dt('Summary: @reset reset, @skipped skipped, @errors errors.', [
+            '@reset' => $reset_count,
+            '@skipped' => $skipped_count,
+            '@errors' => $error_count,
+        ]));
+    }
 }
