@@ -77,7 +77,7 @@ final class UcbDrushCommands extends DrushCommands {
         if($enabled) {
 
 
-            $this->logger()->success(dt('Loading basic_page nodes...'));
+//            $this->logger()->success(dt('Loading basic_page nodes...'));
             $nids = \Drupal::entityQuery('node')->condition('type', 'basic_page')->accessCheck(FALSE)->execute();
 
             $nodes = \Drupal\node\Entity\Node::loadMultiple($nids);
@@ -88,9 +88,9 @@ final class UcbDrushCommands extends DrushCommands {
                     $sectionconfig = $section->getLayoutSettings();
 
                     if (array_key_exists('background_image', $sectionconfig)) {
-                        $this->logger()->success(dt('background_image exists...'));
+//                        $this->logger()->success(dt('background_image exists...'));
                         if (!empty(trim($sectionconfig['background_image_styles']))) {
-                            $this->logger()->success(dt('background_image is not empty...'));
+//                            $this->logger()->success(dt('background_image is not empty...'));
 
                             $overlay_selection = $sectionconfig['background_image_styles'];
                             $overlay_styles = "";
@@ -108,28 +108,28 @@ final class UcbDrushCommands extends DrushCommands {
 
 
                             if (!is_null($mid)) {
-                                $this->logger()->success(dt('MID is not null'));
-                                $this->logger()->success(dt('MID: ' . $mid));
+//                                $this->logger()->success(dt('MID is not null'));
+//                                $this->logger()->success(dt('MID: ' . $mid));
 
 
                                 $mediaobject = \Drupal::entityTypeManager()->getStorage('media')->load($mid);
 
-                                $this->logger()->success(dt(print_r($sectionconfig, True)));
-                                $this->logger()->success(dt('MID Loaded: ' . $mid));
+//                                $this->logger()->success(dt(print_r($sectionconfig, True)));
+//                                $this->logger()->success(dt('MID Loaded: ' . $mid));
 
                                 $fid = $mediaobject->field_media_image->target_id;
-                                $this->logger()->success(dt('FID: ' . $fid));
+//                                $this->logger()->success(dt('FID: ' . $fid));
 
 
                                 $file = \Drupal::entityTypeManager()->getStorage('file')->load($fid);
 
-                                $this->logger()->success(dt('FID Loaded: ' . $fid));
+//                                $this->logger()->success(dt('FID Loaded: ' . $fid));
 
 
 //                                $url = $file->createFileUrl();
                                 $url = "https://www.colorado.edu/" . $subpath . $file->createFileUrl();
 
-                                $this->logger()->success(dt('URL: ' . $url));
+//                                $this->logger()->success(dt('URL: ' . $url));
 
 
                                 $crop = \Drupal::service('focal_point.manager')->getCropEntity($file, 'focal_point');
@@ -175,7 +175,7 @@ final class UcbDrushCommands extends DrushCommands {
         }
         else
         {
-            $this->logger()->success(dt('Domain masking not enabled.  Exiting.'));
+//            $this->logger()->success(dt('Domain masking not enabled.  Exiting.'));
         }
     }
 
